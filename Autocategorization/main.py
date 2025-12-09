@@ -1,0 +1,15 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+import auth_ai
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+app.include_router(auth_ai.router, prefix="/api", tags=["auth-ai"])
