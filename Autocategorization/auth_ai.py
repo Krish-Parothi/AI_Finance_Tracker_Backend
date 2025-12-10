@@ -58,5 +58,5 @@ def login(req: LoginReq, response: Response):
 @router.post("/auto-categorize")
 def auto_categorize(data: ParagraphReq, user=Depends(auth_user)):
     expenses = extractor.extract(data.paragraph)
-    count = writer.insert_expenses(user_id=user["user_id"], expenses=expenses)
+    count = writer.insert_expenses(user_id=user, expenses=expenses)
     return {"inserted": count, "parsed": expenses}
