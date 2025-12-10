@@ -46,6 +46,7 @@ async def whatsapp_webhook(Body: str = Form(...), From: str = Form(...)):
             # Expect message like: "login password"
             try:
                 _, password = Body.split()
+                password = str(password)
                 user_doc = login_user(From, password)
                 if user_doc:
                     session_state[From] = user_doc  # mark as logged in
