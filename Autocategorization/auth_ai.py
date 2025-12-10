@@ -4,6 +4,7 @@ import jwt, os
 from datetime import datetime, timedelta
 from Autocategorization.llm import LLMExtractor
 from Autocategorization.db import DBWriter
+from app.utils.auth_dependency import auth_user
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -55,7 +56,7 @@ def login(req: LoginReq, response: Response):
     return {"status": "logged in", "user_id": user["user_id"]}
 
 @router.post("/auto-categorize")
-def auto_categorize(data: ParagraphReq, user=Depends(get_current_user)):
+def auto_categorize(data: ParagraphReq, user=Depends(auth_user)):
     expenses = extractor.extract(data.paragraph)
     count = writer.insert_expenses(user_id=user["user_id"], expenses=expenses)
     return {"inserted": count, "parsed": expenses}
