@@ -6,7 +6,6 @@ from datetime import datetime
 users = db["users"]
 
 def signup_user(phone: str, username: str, password: str):
-    password = str(password)  # ensure string
     if users.find_one({"phone": phone}):
         return None  # Already exists
     hashed_pw = generate_password_hash(password)
@@ -21,7 +20,6 @@ def signup_user(phone: str, username: str, password: str):
     return user_doc
 
 def login_user(phone: str, password: str):
-    password = str(password)  # ensure string
     user = users.find_one({"phone": phone})
     if not user or not check_password_hash(user["password"], password):
         return None
