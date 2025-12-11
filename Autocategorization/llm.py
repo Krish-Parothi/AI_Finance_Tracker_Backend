@@ -1,3 +1,4 @@
+# Autocategorization/llm.py
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 import json, os
@@ -20,10 +21,11 @@ Rules:
 2. No duplicates.
 3. Ignore irrelevant numbers.
 4. Return strictly JSON array, nothing else.
-
-
+5. If no expenses found, return exactly [] and never create empty objects.
 '''
+
 USER_PROMPT = "{paragraph}"
+
 
 class LLMExtractor:
     def __init__(self):
@@ -37,9 +39,9 @@ class LLMExtractor:
     def extract(self, paragraph: str):
         msg = self.prompt.format_messages(paragraph=paragraph)
         raw = self.model.invoke(msg).content.strip()
-    
+
         # ---------------------------
-        # structural validation first
+        # structural validation
         # ---------------------------
         def safe_load(text):
             try:
@@ -49,18 +51,14 @@ class LLMExtractor:
             except:
                 return None
             return None
-    
-        # attempt 1 → direct JSON
+
         data = safe_load(raw)
-        if data is None:
-            # attempt 2 → extract JSON segment only
-            if "[" in raw and "]" in raw:
-                segment = raw[raw.index("[") : raw.rindex("]") + 1]
-                data = safe_load(segment)
-    
+        if data is None and "[" in raw and "]" in raw:
+            segment = raw[raw.index("["): raw.rindex("]")+1]
+            data = safe_load(segment)
         if data is None:
             return []
-    
+
         # ---------------------------
         # semantic cleaning
         # ---------------------------
@@ -71,12 +69,11 @@ class LLMExtractor:
             amt = d.get("amount")
             desc = d.get("description")
             cat = d.get("category")
-    
             if (
                 isinstance(amt, (int, float)) and amt > 0 and
                 isinstance(desc, str) and desc.strip() != "" and
                 isinstance(cat, str) and cat.strip() != ""
             ):
                 cleaned.append(d)
-    
+
         return cleaned
