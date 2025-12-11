@@ -36,8 +36,47 @@ class LLMExtractor:
 
     def extract(self, paragraph: str):
         msg = self.prompt.format_messages(paragraph=paragraph)
-        res = self.model.invoke(msg).content.strip()
-        try: return json.loads(res)
-        except:
-            try: return json.loads(res[res.index("["): res.rindex("]")+1])
-            except: return []
+        raw = self.model.invoke(msg).content.strip()
+    
+        # ---------------------------
+        # structural validation first
+        # ---------------------------
+        def safe_load(text):
+            try:
+                data = json.loads(text)
+                if isinstance(data, list):
+                    return data
+            except:
+                return None
+            return None
+    
+        # attempt 1 → direct JSON
+        data = safe_load(raw)
+        if data is None:
+            # attempt 2 → extract JSON segment only
+            if "[" in raw and "]" in raw:
+                segment = raw[raw.index("[") : raw.rindex("]") + 1]
+                data = safe_load(segment)
+    
+        if data is None:
+            return []
+    
+        # ---------------------------
+        # semantic cleaning
+        # ---------------------------
+        cleaned = []
+        for d in data:
+            if not isinstance(d, dict):
+                continue
+            amt = d.get("amount")
+            desc = d.get("description")
+            cat = d.get("category")
+    
+            if (
+                isinstance(amt, (int, float)) and amt > 0 and
+                isinstance(desc, str) and desc.strip() != "" and
+                isinstance(cat, str) and cat.strip() != ""
+            ):
+                cleaned.append(d)
+    
+        return cleaned
