@@ -1,0 +1,59 @@
+from fastapi import APIRouter, Depends, HTTPException
+from datetime import datetime, timedelta
+from app.utils.auth_dependency import auth_user
+from app.db import db
+
+router = APIRouter()
+transactions = db["expenses"]
+
+@router.get("/summary")
+def dashboard_summary(user = Depends(auth_user)):
+    user_id = user["user_id"]
+
+    now = datetime.utcnow()
+    current_month_start = datetime(now.year, now.month, 1)
+    last_month_end = current_month_start - timedelta(days=1)
+    last_month_start = datetime(last_month_end.year, last_month_end.month, 1)
+
+    txs = list(transactions.find({"user_id": user_id}))
+
+    total_balance = sum(t.get("amount", 0) for t in txs)
+
+    monthly_spending = sum(
+        abs(t["amount"]) for t in txs
+        if t["amount"] < 0 and t["timestamp"] >= current_month_start
+    )
+
+    monthly_income = sum(
+        t["amount"] for t in txs
+        if t["amount"] > 0 and t["timestamp"] >= current_month_start
+    )
+
+    last_spending = sum(
+        abs(t["amount"]) for t in txs
+        if t["amount"] < 0 and last_month_start <= t["timestamp"] <= last_month_end
+    )
+
+    last_income = sum(
+        t["amount"] for t in txs
+        if t["amount"] > 0 and last_month_start <= t["timestamp"] <= last_month_end
+    )
+
+    spending_change = (
+        ((monthly_spending - last_spending) / last_spending) * 100
+        if last_spending > 0 else 0
+    )
+
+    income_change = (
+        ((monthly_income - last_income) / last_income) / last_income * 100
+        if last_income > 0 else 0
+    )
+
+    return {
+        "totalBalance": total_balance,
+        "monthlySpending": monthly_spending,
+        "monthlyIncome": monthly_income,
+        "currentBalance": total_balance,
+        "spendingChange": spending_change,
+        "incomeChange": income_change
+    }
