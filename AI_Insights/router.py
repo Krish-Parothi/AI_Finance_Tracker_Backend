@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from service import InsightsService
+from AI_Insights.service import InsightsService
 from app.utils.auth_dependency import auth_user  # already existing
 
 router = APIRouter(tags=["Insights"])
