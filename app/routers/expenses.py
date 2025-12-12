@@ -29,7 +29,7 @@ def add_expense(data: ExpenseCreate, user_id: str = Depends(auth_user)):
 @router.get("/list")
 def list_expenses(user_id: str = Depends(auth_user)):
     docs = expenses.find({"user_id": oid(user_id)})
-    return success("ok", [serialize_expense(d) for d in docs])
+    return success("ok", [d for d in docs])
 
 @router.post("/range")
 def expense_range(r: DateRange, user_id: str = Depends(auth_user)):
