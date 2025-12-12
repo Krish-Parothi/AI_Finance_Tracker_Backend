@@ -7,6 +7,7 @@ from Autocategorization import auth_ai
 from Whatsapp_Integration.whatsapp_webhook import router as text_expense_router
 from Image_Vision.router import router as vision_router
 from app.routers.dashboard import router as dashboard_router
+from AI_Insights.router import router as insights_router
 
 app = FastAPI()
 
@@ -28,3 +29,4 @@ app.include_router(auth_ai.router, prefix="/api", tags=["auth-ai"])
 app.include_router(text_expense_router, prefix="/api/whatsapp")
 app.include_router(vision_router, prefix="/api/vision", tags=["vision"])
 app.include_router(dashboard_router, prefix="/dashboard", tags=["Dashboard"])
+app.include_router(insights_router, prefix="/api")
