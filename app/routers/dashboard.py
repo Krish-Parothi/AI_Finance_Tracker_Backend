@@ -16,7 +16,18 @@ def dashboard_summary(user_id: str = Depends(auth_user)):
     last_month_end = current_month_start - timedelta(days=1)
     last_month_start = datetime(last_month_end.year, last_month_end.month, 1)
 
-    txs = list(transactions.find({"user_id": oid(user_id)}))
+    # txs = list(transactions.find({"user_id": oid(user_id)}))
+    txs_raw = list(transactions.find({"user_id": oid(user_id)}))
+
+    txs = []
+    for t in txs_raw:
+        ts = t.get("timestamp")
+        if isinstance(ts, str):
+            try:
+                t["timestamp"] = datetime.fromisoformat(ts)
+            except:
+                t["timestamp"] = None
+        txs.append(t)
 
     total_balance = sum(t.get("amount", 0) for t in txs)
 
