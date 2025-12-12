@@ -16,10 +16,25 @@ from app.utils.jwt_handler import decode_token
 #     payload = decode_token(token)
 #     return payload["user_id"]
 
+# async def auth_user(authorization: str = Header(None)):
+#     if not authorization:
+#         raise HTTPException(401, "No authorization header")
+
+#     token = authorization.split(" ")[1]
+#     payload = decode_token(token)
+#     return payload["user_id"]
+
 async def auth_user(authorization: str = Header(None)):
     if not authorization:
-        raise HTTPException(401, "No authorization header")
+        raise HTTPException(401, "Authorization header missing")
 
-    token = authorization.split(" ")[1]
-    payload = decode_token(token)
-    return payload["user_id"]
+    try:
+        scheme, token = authorization.split(" ")
+        if scheme.lower() != "bearer":
+            raise HTTPException(401, "Invalid token scheme")
+
+        payload = decode_token(token)
+        return payload["user_id"]
+
+    except Exception as e:
+        raise HTTPException(401, "Invalid or expired token")
