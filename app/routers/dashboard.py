@@ -2,20 +2,21 @@ from fastapi import APIRouter, Depends, HTTPException
 from datetime import datetime, timedelta
 from app.utils.auth_dependency import auth_user
 from app.db import db
+from app.db import oid
 
 router = APIRouter()
 transactions = db["expenses"]
 
 @router.get("/summary")
-def dashboard_summary(user = Depends(auth_user)):
-    user_id = user["user_id"]
+def dashboard_summary(user_id: str = Depends(auth_user)):
+    # user_id = ["user_id"]
 
     now = datetime.utcnow()
     current_month_start = datetime(now.year, now.month, 1)
     last_month_end = current_month_start - timedelta(days=1)
     last_month_start = datetime(last_month_end.year, last_month_end.month, 1)
 
-    txs = list(transactions.find({"user_id": user_id}))
+    txs = list(transactions.find({"user_id": oid(user_id)}))
 
     total_balance = sum(t.get("amount", 0) for t in txs)
 
